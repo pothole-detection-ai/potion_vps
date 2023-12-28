@@ -2,6 +2,10 @@ var socket = io.connect('wss://stream.guimobilerobotagvswarm.my.id', {
     transports: ['websocket']
 });
 
+// var socket = io.connect('http://localhost:5000', {
+//     transports: ['websocket']
+// });
+
 
 socket.on('connect', function () {
     console.log("Connected...!", socket.connected);

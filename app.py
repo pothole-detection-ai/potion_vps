@@ -1,11 +1,11 @@
 import cv2
 import numpy as np
-from flask import Flask, render_template, send_from_directory
+from flask import Flask, render_template
 from flask_socketio import SocketIO, emit
 import base64
 import torch
 import os
-from camera import VideoCamera  # Import your VideoCamera class
+import requests
 from flask_cors import CORS
 
 app = Flask(__name__, static_folder="./templates/static")
@@ -13,8 +13,31 @@ CORS(app)
 app.config["SECRET_KEY"] = "secret!"
 socketio = SocketIO(app, async_mode="eventlet")
 
-# Load YOLOv5 model
-model = torch.hub.load('ultralytics/yolov5', 'custom', path='best.pt', force_reload=True)
+# Function to load YOLOv5 model based on the provided model name
+def load_model(model_name):
+    model_folder = "models"
+    model_path = os.path.join(model_folder, model_name)
+    return torch.hub.load('ultralytics/yolov5', 'custom', path=model_path, force_reload=True)
+
+# Mapping of model_name values to YOLOv5 model names
+MODEL_NAME_MAPPING = {
+    "BEST_1": "yolov5s",
+    "MODEL_2": "yolov5n",
+    "MODEL_3": "yolov5m",
+}
+
+# Get initial model name from API
+api_url = "https://guimobilerobotagvswarm.my.id/api/model"
+response = requests.get(api_url)
+initial_model_name = response.json().get("model_name")
+
+# Map the initial model name to YOLOv5 model name
+model_name = MODEL_NAME_MAPPING.get(initial_model_name, initial_model_name)
+
+
+
+# Load initial YOLOv5 model
+model = load_model(model_name)
 
 def base64_to_image(base64_string):
     base64_data = base64_string.split(",")[1]
@@ -39,24 +62,40 @@ def process_results(results):
 
     return processed_img_data
 
-
 @socketio.on("connect")
 def test_connect():
     print("Connected")
     emit("my response", {"data": "Connected"})
 
 @socketio.on("image")
-def receive_image(image):
+def receive_image(data):
     print("Received image")
-    image = base64_to_image(image)
+
+    # Declare model_name as a global variable
+    global model_name
+    global model
+
+    # Get the updated model name from the API
+    updated_model_name = requests.get(api_url).json().get("model_name")
+
+    # Map the updated model name to YOLOv5 model name
+    updated_model_name = MODEL_NAME_MAPPING.get(updated_model_name, updated_model_name)
+
+    # Reload the model if the model name has changed
+    if updated_model_name != model_name:
+        model_name = updated_model_name
+        model = load_model(model_name)
+        print("Model updated to:", model_name)
+
+    image = base64_to_image(data)
     results = model(image)  # Use YOLOv5 for object detection
-    print("===========",results)
+    print("===========", results)
     processed_img_data = process_results(results)
     emit("processed_image", processed_img_data)
 
 @app.route("/")
 def index():
-    return render_template("index.html")
+    return render_template("index.html", model_name=model_name)
 
 if __name__ == "__main__":
     socketio.run(app, debug=False, port=5000, host='0.0.0.0')

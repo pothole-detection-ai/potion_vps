@@ -50,6 +50,11 @@
       height: 100%;
       border-radius: 25px;
     }
+
+    h2 {
+      text-align: center;
+      margin: 0 auto;
+    }
   </style>
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.1.2/socket.io.js"></script>
@@ -60,12 +65,12 @@
     <a href="https://guimobilerobotagvswarm.my.id/">Outdoor</a>
     <a href="https://stream.guimobilerobotagvswarm.my.id/">Indoor</a>
   </div>
-  <div id="container">
+  <div id="container" style="display: none;">
     <h5>Realtime camera</h5>
     <video autoplay playsinline id="videoElement"></video>
     <canvas id="canvas"></canvas>
   </div>
-
+  <h2>MODEL: {{ model_name }}</h2>
   <div class='content video'>
     <img id="photo">
   </div>
