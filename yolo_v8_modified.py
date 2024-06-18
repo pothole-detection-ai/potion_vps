@@ -133,7 +133,8 @@ def yolo_detect_image(image_path):
     results = model.detect_full(image)
     return results
 
-img = cv2.imread('images/road (8).jpg')
-result = model.detect_full(img)
+# FOR TESTING
+# img = cv2.imread('images/road (8).jpg')
+# result = model.detect_full(img)
 
 cv2.destroyAllWindows()
