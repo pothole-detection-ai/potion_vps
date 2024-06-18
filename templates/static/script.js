@@ -1,10 +1,11 @@
-var socket = io.connect('wss://stream.guimobilerobotagvswarm.my.id', {
+var socket = io.connect('wss://vps.potion.my.id', {
     transports: ['websocket']
 });
 
-// var socket = io.connect('http://localhost:5000', {
+// var socket = io.connect('http://127.0.0.1:5000/', {
 //     transports: ['websocket']
 // });
+
 
 
 socket.on('connect', function () {
@@ -74,5 +75,5 @@ setInterval(() => {
     context.clearRect(0, 0, canvas.width, canvas.height);
 
     socket.emit('image', data);
-}, 750);
+}, 2000);
 
