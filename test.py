@@ -2,7 +2,7 @@ import cv2
 from PIL import Image
 from ultralytics import YOLO
 
-model = YOLO("yolov8n-new.pt")
+model = YOLO("models/last_100epochs.pt")
 
 # Load an image
 img_1 = Image.open("image-yes.jpg")

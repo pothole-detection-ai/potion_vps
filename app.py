@@ -11,17 +11,19 @@ import json
 import io
 from PIL import Image
 import math
-import yolo_v8
 import helpers
 import custom
+import yolo_v8
+import yolo_v8_modified
 
 app = Flask(__name__, static_folder="./templates/static")
 CORS(app)
 app.config["SECRET_KEY"] = "secret!"
-socketio = SocketIO(app, async_mode="eventlet", cors_allowed_origins="https://vps.potion.my.id")
+socketio = SocketIO(app, async_mode="eventlet")
 
 def load_model(model_name):
-    model_folder = "/root/potion/models"
+    # model_folder = "/root/potion/models" # for production
+    model_folder = "models"    # for development
     model_path = os.path.join(model_folder, model_name)
     try:
         return YOLO(model_path)
@@ -101,6 +103,31 @@ def index():
     return render_template("index.html", model_name=model_name)
 
 # create route for post request and the request data contains base64 image
+# @app.route('/detect', methods=['POST'])
+# def detect():
+#     if 'base64_image_string' in request.json and request.json['base64_image_string']:
+#         # get the base64 image from the request data
+#         base64_image_string = request.json['base64_image_string']
+
+#         print("base64_image_string:", base64_image_string)
+
+#         # convert the base64 image to jpg
+#         helpers.base64_to_jpg(base64_image_string, FOLDER_PATH +  "/uploaded_object.jpg")
+        
+#         print("Image saved successfully as uploaded_object.jpg")
+
+#         # # detect the image
+#         results = yolo_v8.detect_image(FOLDER_PATH + "/uploaded_object.jpg")
+#         base64_result = custom.detection_result(results["save_dir_path"], "uploaded_object.jpg")
+#         return jsonify({
+#             "base64_image_string": base64_result,
+#             "total_objects": results["total_objects"],
+#         })
+
+#     return jsonify({
+#         "error": "parameter base64_image_string tidak boleh kosong!"
+#     })
+
 @app.route('/detect', methods=['POST'])
 def detect():
     if 'base64_image_string' in request.json and request.json['base64_image_string']:
@@ -115,11 +142,12 @@ def detect():
         print("Image saved successfully as uploaded_object.jpg")
 
         # # detect the image
-        results = yolo_v8.detect_image(FOLDER_PATH + "/uploaded_object.jpg")
-        base64_result = custom.detection_result(results["save_dir_path"], "uploaded_object.jpg")
+        results = yolo_v8_modified.yolo_detect_image(FOLDER_PATH + "/uploaded_object.jpg")
+        base64_result = helpers.jpg_to_base64(image_path)
         return jsonify({
             "base64_image_string": base64_result,
             "total_objects": results["total_objects"],
+            "objects": results["objects"]
         })
 
     return jsonify({
@@ -127,4 +155,5 @@ def detect():
     })
 
 if __name__ == "__main__":
-    socketio.run(app, debug=False, port=5000, host='0.0.0.0')
+    # socketio.run(app, debug=True, port=5000, host='0.0.0.0')
+    socketio.run(app, debug=True, port=5000)
